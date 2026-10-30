@@ -18,19 +18,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $_POST['user'] ?? '';
     $pass = $_POST['pass'] ?? '';
 
-    // VULNERABLE: SQL Injection - No prepared statements, no sanitization
-    $query = "SELECT * FROM users WHERE user='$user' AND pass='$pass'";
-    $result = $conn->query($query);
+    // Consulta preparada: evita la inyección SQL
+    $stmt = $conn->prepare(
+         "SELECT id, user, pass FROM users WHERE user = ?"
+    );
 
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
+    $stmt->bind_param("s", $user);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $row = $result ? $result->fetch_assoc() : null;
+
+    if ($row && password_verify($pass, $row['pass'])) {
+        session_regenerate_id(true);
+
         $_SESSION['logged_in'] = true;
         $_SESSION['username'] = $row['user'];
+
         header("Location: dashboard.php");
         exit();
     } else {
         $error = "ACCESO DENEGADO - Credenciales Imperiales no válidas";
     }
+
+    $stmt->close();
 }
 ?>
 <!DOCTYPE html>

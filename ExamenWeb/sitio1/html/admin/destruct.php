@@ -14,7 +14,7 @@ if ($username !== 'admin') {
 
 $error = "";
 $correct = false;
-$secret_code = "THX-1138-VENT";
+$secret_code = getenv('DESTRUCT_SECRET_CODE');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['code'])) {
     $code = trim($_POST['code']);
